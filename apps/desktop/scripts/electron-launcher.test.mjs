@@ -82,8 +82,23 @@ describe("electron development launcher", () => {
 });
 
 describe("resolveSandboxArgs", () => {
-  it("always disables the Chromium sandbox on Windows", () => {
-    assert.deepEqual(resolveSandboxArgs("/unused/electron", "win32"), ["--no-sandbox"]);
+  it("keeps the Chromium sandbox enabled on Windows by default", () => {
+    assert.deepEqual(
+      resolveSandboxArgs("/unused/electron", "win32", {
+        T3CODE_DISABLE_CHROMIUM_SANDBOX: undefined,
+        T3CODE_HOME: "C:\\missing-t3-home",
+      }),
+      [],
+    );
+  });
+
+  it("disables the Chromium sandbox on Windows when explicitly opted in", () => {
+    assert.deepEqual(
+      resolveSandboxArgs("/unused/electron", "win32", {
+        T3CODE_DISABLE_CHROMIUM_SANDBOX: "1",
+      }),
+      ["--no-sandbox"],
+    );
   });
 
   it("leaves sandbox args empty on macOS", () => {

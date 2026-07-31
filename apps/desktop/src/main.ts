@@ -62,13 +62,22 @@ import * as DesktopWindow from "./window/DesktopWindow.ts";
 import * as DesktopWslBackend from "./wsl/DesktopWslBackend.ts";
 import * as DesktopWslEnvironment from "./wsl/DesktopWslEnvironment.ts";
 
-// Must run before Electron starts the GPU process. On affected Windows hosts
-// the default Chromium sandbox fatals startup with "GPU process isn't usable".
+// Keep Chromium's process sandbox enabled by default on Windows (preview
+// webviews rely on that containment). Only disable it when explicitly opted
+// in, already requested via argv, or a prior GPU STATUS_BREAKPOINT crash left
+// a recovery marker. Otherwise watch for that crash and relaunch once.
+// Must run before the Effect runtime / GPU process starts, so HostProcessPlatform
+// is unavailable here.
+const hostPlatform = NodeOS.platform();
 WindowsChromiumSandbox.applyWindowsChromiumSandboxSwitches({
-  platform: process.platform,
+  platform: hostPlatform,
   appendSwitch: (switchName) => {
     Electron.app.commandLine.appendSwitch(switchName);
   },
+});
+WindowsChromiumSandbox.installWindowsChromiumSandboxRecovery({
+  platform: hostPlatform,
+  app: Electron.app,
 });
 
 const desktopEnvironmentLayer = Layer.unwrap(

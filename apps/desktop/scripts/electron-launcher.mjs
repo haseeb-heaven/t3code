@@ -383,13 +383,25 @@ function resolveLinuxSandboxArgs(electronBinaryPath) {
 }
 
 /**
- * Windows packaged/dev Electron can fatal with "GPU process isn't usable"
- * unless Chromium's sandbox is disabled (#1357, #4543). Mirror the Linux
- * launcher fallback so local `vp` desktop launches match packaged behavior.
+ * Windows Chromium sandbox stays enabled by default (#5108 review). Match
+ * packaged recovery: only pass `--no-sandbox` when explicitly opted in via
+ * `T3CODE_DISABLE_CHROMIUM_SANDBOX=1` or a prior GPU-crash recovery marker.
  */
-export function resolveSandboxArgs(electronBinaryPath, platform = hostPlatform) {
+export function shouldDisableWindowsChromiumSandbox(
+  env = process.env,
+  { homedir = NodeOS.homedir, existsSync = NodeFS.existsSync } = {},
+) {
+  if (env.T3CODE_DISABLE_CHROMIUM_SANDBOX === "1") {
+    return true;
+  }
+  const configuredHome = typeof env.T3CODE_HOME === "string" ? env.T3CODE_HOME.trim() : "";
+  const baseDir = configuredHome.length > 0 ? configuredHome : NodePath.join(homedir(), ".t3");
+  return existsSync(NodePath.join(baseDir, "userdata", "windows-chromium-sandbox-workaround"));
+}
+
+export function resolveSandboxArgs(electronBinaryPath, platform = hostPlatform, env = process.env) {
   if (platform === "win32") {
-    return ["--no-sandbox"];
+    return shouldDisableWindowsChromiumSandbox(env) ? ["--no-sandbox"] : [];
   }
   if (platform !== "linux") {
     return [];
