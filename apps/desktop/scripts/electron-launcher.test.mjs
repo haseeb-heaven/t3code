@@ -4,6 +4,7 @@ import {
   makeDevelopmentLauncherScript,
   resolveElectronBinaryPath,
   resolveMacLauncherPaths,
+  resolveSandboxArgs,
 } from "./electron-launcher.mjs";
 
 describe("electron development launcher", () => {
@@ -77,5 +78,15 @@ describe("electron development launcher", () => {
       "exec '/repo/apps/desktop/.electron-runtime/T3 Code (Dev).app/Contents/MacOS/Electron'",
     );
     assert.notInclude(script, "node_modules/electron");
+  });
+});
+
+describe("resolveSandboxArgs", () => {
+  it("always disables the Chromium sandbox on Windows", () => {
+    assert.deepEqual(resolveSandboxArgs("/unused/electron", "win32"), ["--no-sandbox"]);
+  });
+
+  it("leaves sandbox args empty on macOS", () => {
+    assert.deepEqual(resolveSandboxArgs("/unused/electron", "darwin"), []);
   });
 });

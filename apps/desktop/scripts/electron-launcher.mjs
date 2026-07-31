@@ -382,6 +382,21 @@ function resolveLinuxSandboxArgs(electronBinaryPath) {
   return ["--no-sandbox"];
 }
 
+/**
+ * Windows packaged/dev Electron can fatal with "GPU process isn't usable"
+ * unless Chromium's sandbox is disabled (#1357, #4543). Mirror the Linux
+ * launcher fallback so local `vp` desktop launches match packaged behavior.
+ */
+export function resolveSandboxArgs(electronBinaryPath, platform = hostPlatform) {
+  if (platform === "win32") {
+    return ["--no-sandbox"];
+  }
+  if (platform !== "linux") {
+    return [];
+  }
+  return resolveLinuxSandboxArgs(electronBinaryPath);
+}
+
 export function resolveElectronPath() {
   const electronBinaryPath = resolveElectronBinaryPath();
 
@@ -396,7 +411,7 @@ export function resolveElectronLaunchCommand(args = []) {
   const electronPath = resolveElectronPath();
   return {
     electronPath,
-    args: [...resolveLinuxSandboxArgs(electronPath), ...args],
+    args: [...resolveSandboxArgs(electronPath), ...args],
   };
 }
 

@@ -37,6 +37,7 @@ import * as DesktopConnectionCatalogStore from "./app/DesktopConnectionCatalogSt
 import * as DesktopClerk from "./app/DesktopClerk.ts";
 import * as DesktopApplicationMenu from "./window/DesktopApplicationMenu.ts";
 import * as DesktopAssets from "./app/DesktopAssets.ts";
+import * as WindowsChromiumSandbox from "./app/windowsChromiumSandbox.ts";
 import * as DesktopBackendConfiguration from "./backend/DesktopBackendConfiguration.ts";
 import * as DesktopBackendPool from "./backend/DesktopBackendPool.ts";
 import * as DesktopLocalEnvironmentAuth from "./backend/DesktopLocalEnvironmentAuth.ts";
@@ -60,6 +61,15 @@ import * as PreviewManager from "./preview/Manager.ts";
 import * as DesktopWindow from "./window/DesktopWindow.ts";
 import * as DesktopWslBackend from "./wsl/DesktopWslBackend.ts";
 import * as DesktopWslEnvironment from "./wsl/DesktopWslEnvironment.ts";
+
+// Must run before Electron starts the GPU process. On affected Windows hosts
+// the default Chromium sandbox fatals startup with "GPU process isn't usable".
+WindowsChromiumSandbox.applyWindowsChromiumSandboxSwitches({
+  platform: process.platform,
+  appendSwitch: (switchName) => {
+    Electron.app.commandLine.appendSwitch(switchName);
+  },
+});
 
 const desktopEnvironmentLayer = Layer.unwrap(
   Effect.gen(function* () {
