@@ -55,10 +55,9 @@ export function resolveWindowsChromiumSandboxMarkerPath(
 }
 
 export function argvRequestsWindowsChromiumSandboxDisable(argv: ReadonlyArray<string>): boolean {
-  return argv.some(
-    (entry) =>
-      entry === `--${WINDOWS_CHROMIUM_SANDBOX_SWITCH}` || entry === WINDOWS_CHROMIUM_SANDBOX_SWITCH,
-  );
+  // Only the Chromium switch form. A bare positional `no-sandbox` must not
+  // disable process isolation just because a path/project uses that name.
+  return argv.some((entry) => entry === `--${WINDOWS_CHROMIUM_SANDBOX_SWITCH}`);
 }
 
 export function shouldDisableWindowsChromiumSandbox(
@@ -165,6 +164,12 @@ export function installWindowsChromiumSandboxRecovery(input: {
   readonly markerPath?: string;
   readonly writeMarker?: (markerPath: string) => void;
 }): boolean {
+  // Never register on macOS/Linux: a matching GPU exitCode there must not
+  // write the Windows marker or relaunch with --no-sandbox.
+  if (input.platform !== "win32") {
+    return false;
+  }
+
   if (
     shouldDisableWindowsChromiumSandbox({
       platform: input.platform,

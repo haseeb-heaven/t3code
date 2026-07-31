@@ -76,10 +76,12 @@ WindowsChromiumSandbox.applyWindowsChromiumSandboxSwitches({
     Electron.app.commandLine.appendSwitch(switchName);
   },
 });
-WindowsChromiumSandbox.installWindowsChromiumSandboxRecovery({
-  platform: hostPlatform,
-  app: Electron.app,
-});
+if (hostPlatform === "win32") {
+  WindowsChromiumSandbox.installWindowsChromiumSandboxRecovery({
+    platform: hostPlatform,
+    app: Electron.app,
+  });
+}
 
 const desktopEnvironmentLayer = Layer.unwrap(
   Effect.gen(function* () {

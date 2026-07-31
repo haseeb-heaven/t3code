@@ -39,6 +39,25 @@ describe("windowsChromiumSandbox", () => {
     );
   });
 
+  it("ignores a bare positional no-sandbox argv entry", () => {
+    assert.isFalse(
+      WindowsChromiumSandbox.argvRequestsWindowsChromiumSandboxDisable([
+        "electron",
+        "C:\\projects\\no-sandbox",
+        "no-sandbox",
+      ]),
+    );
+    assert.deepEqual(
+      WindowsChromiumSandbox.resolveWindowsChromiumSandboxSwitches({
+        platform: "win32",
+        env: {},
+        argv: ["electron", "no-sandbox"],
+        markerExists: () => false,
+      }),
+      [],
+    );
+  });
+
   it("disables the Chromium sandbox when a recovery marker is present", () => {
     assert.deepEqual(
       WindowsChromiumSandbox.resolveWindowsChromiumSandboxSwitches({
@@ -217,5 +236,28 @@ describe("windowsChromiumSandbox", () => {
     });
 
     assert.isFalse(installed);
+  });
+
+  it("does not install GPU recovery on macOS or Linux", () => {
+    for (const platform of ["darwin", "linux"] as const) {
+      const installed = WindowsChromiumSandbox.installWindowsChromiumSandboxRecovery({
+        platform,
+        env: {},
+        argv: ["electron"],
+        app: {
+          on: () => {
+            assert.fail(`should not register recovery on ${platform}`);
+          },
+          relaunch: () => {
+            assert.fail(`should not relaunch on ${platform}`);
+          },
+          exit: () => {
+            assert.fail(`should not exit on ${platform}`);
+          },
+        },
+      });
+
+      assert.isFalse(installed);
+    }
   });
 });
