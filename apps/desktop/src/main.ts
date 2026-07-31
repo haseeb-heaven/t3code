@@ -68,6 +68,7 @@ import * as DesktopWslEnvironment from "./wsl/DesktopWslEnvironment.ts";
 // a recovery marker. Otherwise watch for that crash and relaunch once.
 // Must run before the Effect runtime / GPU process starts, so HostProcessPlatform
 // is unavailable here.
+// oxlint-disable-next-line t3code/no-global-process-runtime -- Early Chromium switch bootstrap runs before Effect HostProcessPlatform is provided.
 const hostPlatform = NodeOS.platform();
 WindowsChromiumSandbox.applyWindowsChromiumSandboxSwitches({
   platform: hostPlatform,
